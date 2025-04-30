@@ -19,6 +19,17 @@ def create_db():
         )
     """)
     con.commit()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS supplier(
+            invoice INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            contact TEXT,
+            desc TEXT
+        )
+    """)
+    con.commit()
+
     con.close()
 
 create_db()
