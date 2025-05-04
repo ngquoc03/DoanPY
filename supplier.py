@@ -15,6 +15,24 @@ class supplierClass:
         self.var_desc = StringVar()
         self.var_contact = StringVar()
         self.var_name = StringVar()
+        self.var_searchtxt = StringVar()
+        self.var_searchby = StringVar()
+
+        SearchFrame = LabelFrame(self.root, text="Tìm kiếm theo số hóa đơn", font=("goudy old style", 12, "bold"),
+                         fg="black", bg="white", bd=0, highlightthickness=0)
+        SearchFrame.place(x=700, y=60, width=380, height=60)
+
+
+
+        txt_search = Entry(SearchFrame, textvariable=self.var_searchtxt, font=("goudy old style", 15),
+                           bg="lightyellow")
+        txt_search.place(x=10, y=10, width=200)
+
+        btn_search = Button(SearchFrame, text="Tìm", command=self.search, font=("goudy old style", 12),
+                            bg="#4caf50", fg="white", cursor="hand2")
+        btn_search.place(x=220, y=9, width=100, height=30)
+
+
 
         title = Label(self.root, text="Thông Tin Nhà Cung Cấp", font=("goudy old style", 20), bg="#0f4d7d", fg="white")
         title.place(x=50, y=10, width=1000)
@@ -30,15 +48,17 @@ class supplierClass:
 
         Label(self.root, text="Mô tả", font=("goudy old style", 15), bg="white").place(x=50, y=200)
         self.txt_desc = Text(self.root, font=("goudy old style", 15), bg="lightyellow")
-        self.txt_desc.place(x=180, y=200, width=300, height=60)
+        self.txt_desc.place(x=180, y=200, width=470, height=90)
 
-        Button(self.root, text="Lưu", command=self.add, font=("goudy old style", 15), bg="#2196f3", fg="white", cursor="hand2").place(x=500, y=305, width=110, height=28)
-        Button(self.root, text="Cập Nhật", command=self.update, font=("goudy old style", 15), bg="#4caf50", fg="white", cursor="hand2").place(x=620, y=305, width=110, height=28)
-        Button(self.root, text="Xóa", command=self.delete, font=("goudy old style", 15), bg="#f44336", fg="white", cursor="hand2").place(x=740, y=305, width=110, height=28)
-        Button(self.root, text="Xóa thông tin", command=self.clear, font=("goudy old style", 15), bg="#607d8b", fg="white", cursor="hand2").place(x=860, y=305, width=110, height=28)
+        Button(self.root, text="Lưu", command=self.add, font=("goudy old style", 15), bg="#2196f3", fg="white", cursor="hand2").place(x=180, y=320, width=110, height=35)
+        Button(self.root, text="Cập Nhật", command=self.update, font=("goudy old style", 15), bg="#4caf50", fg="white", cursor="hand2").place(x=300, y=320, width=110, height=35)
+        Button(self.root, text="Xóa", command=self.delete, font=("goudy old style", 15), bg="#f44336", fg="white", cursor="hand2").place(x=420, y=320, width=110, height=35)
+        Button(self.root, text="Xóa thông tin", command=self.clear, font=("goudy old style", 15), bg="#607d8b", fg="white", cursor="hand2").place(x=540, y=320, width=110, height=35)
 
         emp_frame = Frame(self.root, bd=3, relief=RIDGE)
-        emp_frame.place(x=0, y=350, relwidth=1, height=150)
+        emp_frame.place(x=700, y=130, width=380, height=300)
+
+
 
         scrollx = Scrollbar(emp_frame, orient=HORIZONTAL)
         scrolly = Scrollbar(emp_frame, orient=VERTICAL)
@@ -160,6 +180,32 @@ class supplierClass:
                     self.supplierTable.insert('', END, values=row)
             except Exception as ex:
                 messagebox.showerror("Lỗi", f"Lỗi do: {str(ex)}", parent=self.root)
+    def search(self):
+        try:
+            con = sqlite3.connect(database=r"ims.db")
+            cur = con.cursor()
+            search_term = self.var_searchtxt.get()
+            
+            if search_term == "":
+                messagebox.showerror("Lỗi", "Vui lòng nhập tên cần tìm!", parent=self.root)
+                return
+
+            cur.execute("SELECT * FROM supplier WHERE name LIKE ?", ('%' + search_term + '%',))
+            rows = cur.fetchall()
+
+            self.supplierTable.delete(*self.supplierTable.get_children())
+
+            if rows:
+                for row in rows:
+                    self.supplierTable.insert('', END, values=row)
+            else:
+                messagebox.showinfo("Kết quả", "Không tìm thấy kết quả phù hợp!", parent=self.root)
+
+            con.close()
+
+        except Exception as ex:
+            messagebox.showerror("Lỗi", f"Lỗi do: {str(ex)}", parent=self.root)
+
 
 if __name__ == "__main__":
     root = Tk()
