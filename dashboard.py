@@ -2,6 +2,7 @@ from tkinter import*
 from PIL import Image,ImageTk
 from employee import employeeClass
 from supplier import supplierClass
+from category import categoryClass
 class IMS:
     def __init__(self,root):
         self.root=root
@@ -33,7 +34,7 @@ class IMS:
         
         btn_employee = Button(LeftMenu,text="Nhân viên",command=self.employee,image=self.icon_side,compound=LEFT,padx=5,anchor="w",font=("times new roman",20,"bold"),bg="white",bd=3,cursor="hand2").pack(side=TOP,fill=X)
         btn_supplier = Button(LeftMenu,text="Cung cấp",command=self.supplier,image=self.icon_side,compound=LEFT,padx=5,anchor="w",font=("times new roman",20,"bold"),bg="white",bd=3,cursor="hand2").pack(side=TOP,fill=X)
-        btn_category = Button(LeftMenu,text="Danh mục",image=self.icon_side,compound=LEFT,padx=5,anchor="w",font=("times new roman",20,"bold"),bg="white",bd=3,cursor="hand2").pack(side=TOP,fill=X)
+        btn_category = Button(LeftMenu,text="Danh mục",command=self.category,image=self.icon_side,compound=LEFT,padx=5,anchor="w",font=("times new roman",20,"bold"),bg="white",bd=3,cursor="hand2").pack(side=TOP,fill=X)
         btn_product = Button(LeftMenu,text="Sản phẩm",image=self.icon_side,compound=LEFT,padx=5,anchor="w",font=("times new roman",20,"bold"),bg="white",bd=3,cursor="hand2").pack(side=TOP,fill=X)
         btn_sales = Button(LeftMenu,text="Sales",image=self.icon_side,compound=LEFT,padx=5,anchor="w",font=("times new roman",20,"bold"),bg="white",bd=3,cursor="hand2").pack(side=TOP,fill=X)
         btn_exit = Button(LeftMenu,text="Thoát",image=self.icon_side,compound=LEFT,padx=5,anchor="w",font=("times new roman",20,"bold"),bg="white",bd=3,cursor="hand2").pack(side=TOP,fill=X)
@@ -64,6 +65,10 @@ class IMS:
         self.new_win=Toplevel(self.root)
         self.new_obj=supplierClass(self.new_win)
 
+    def category(self):
+        self.new_win=Toplevel(self.root)
+        self.new_obj=categoryClass(self.new_win)
+ 
 
 if __name__=="__main__":
     root=Tk()

@@ -3,6 +3,8 @@ import sqlite3
 def create_db():
     con = sqlite3.connect(database=r'ims.db')
     cur = con.cursor()
+
+    # Employee table
     cur.execute("""
         CREATE TABLE IF NOT EXISTS employee(
             eid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,8 +20,8 @@ def create_db():
             salary TEXT
         )
     """)
-    con.commit()
 
+    # Supplier table
     cur.execute("""
         CREATE TABLE IF NOT EXISTS supplier(
             invoice INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,8 +30,16 @@ def create_db():
             desc TEXT
         )
     """)
-    con.commit()
 
+    # Category table (FIXED)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS category(
+            cid INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT
+        )
+    """)
+
+    con.commit()
     con.close()
 
 create_db()
