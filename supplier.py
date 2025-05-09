@@ -11,32 +11,30 @@ class supplierClass:
         self.root.config(bg="white")
         self.root.focus_force()
 
+        # === Variables ===
         self.var_sup_invoice = StringVar()
         self.var_desc = StringVar()
         self.var_contact = StringVar()
         self.var_name = StringVar()
         self.var_searchtxt = StringVar()
-        self.var_searchby = StringVar()
 
+        # === Search Frame ===
         SearchFrame = LabelFrame(self.root, text="Tìm kiếm theo số hóa đơn", font=("goudy old style", 12, "bold"),
-                         fg="black", bg="white", bd=0, highlightthickness=0)
+                                 fg="black", bg="white", bd=0, highlightthickness=0)
         SearchFrame.place(x=700, y=60, width=380, height=60)
 
-
-
-        txt_search = Entry(SearchFrame, textvariable=self.var_searchtxt, font=("goudy old style", 15),
-                           bg="lightyellow")
+        txt_search = Entry(SearchFrame, textvariable=self.var_searchtxt, font=("goudy old style", 15), bg="lightyellow")
         txt_search.place(x=10, y=10, width=200)
 
         btn_search = Button(SearchFrame, text="Tìm", command=self.search, font=("goudy old style", 12),
                             bg="#4caf50", fg="white", cursor="hand2")
         btn_search.place(x=220, y=9, width=100, height=30)
 
-
-
+        # === Title ===
         title = Label(self.root, text="Thông Tin Nhà Cung Cấp", font=("goudy old style", 20), bg="#0f4d7d", fg="white")
         title.place(x=50, y=10, width=1000)
 
+        # === Input Fields ===
         Label(self.root, text="Số hóa đơn", font=("goudy old style", 15), bg="white").place(x=50, y=80)
         Entry(self.root, textvariable=self.var_sup_invoice, font=("goudy old style", 15), bg="lightyellow").place(x=180, y=80, width=180)
 
@@ -50,15 +48,15 @@ class supplierClass:
         self.txt_desc = Text(self.root, font=("goudy old style", 15), bg="lightyellow")
         self.txt_desc.place(x=180, y=200, width=470, height=90)
 
+        # === Buttons ===
         Button(self.root, text="Lưu", command=self.add, font=("goudy old style", 15), bg="#2196f3", fg="white", cursor="hand2").place(x=180, y=320, width=110, height=35)
         Button(self.root, text="Cập Nhật", command=self.update, font=("goudy old style", 15), bg="#4caf50", fg="white", cursor="hand2").place(x=300, y=320, width=110, height=35)
         Button(self.root, text="Xóa", command=self.delete, font=("goudy old style", 15), bg="#f44336", fg="white", cursor="hand2").place(x=420, y=320, width=110, height=35)
         Button(self.root, text="Xóa thông tin", command=self.clear, font=("goudy old style", 15), bg="#607d8b", fg="white", cursor="hand2").place(x=540, y=320, width=110, height=35)
 
+        # === Table Frame ===
         emp_frame = Frame(self.root, bd=3, relief=RIDGE)
         emp_frame.place(x=700, y=130, width=380, height=300)
-
-
 
         scrollx = Scrollbar(emp_frame, orient=HORIZONTAL)
         scrolly = Scrollbar(emp_frame, orient=VERTICAL)
@@ -79,10 +77,25 @@ class supplierClass:
         self.supplierTable.pack(fill=BOTH, expand=1)
         self.supplierTable.bind("<ButtonRelease-1>", self.get_data)
 
+        # === Initialize ===
+        self.create_table()
         self.show()
 
+    def create_table(self):
+        with sqlite3.connect(database='ims.db') as con:
+            cur = con.cursor()
+            cur.execute("""
+            CREATE TABLE IF NOT EXISTS supplier (
+                invoice TEXT PRIMARY KEY,
+                name TEXT,
+                contact TEXT,
+                desc TEXT
+            )
+            """)
+            con.commit()
+
     def add(self):
-        with sqlite3.connect(database=r'ims.db') as con:
+        with sqlite3.connect(database='ims.db') as con:
             cur = con.cursor()
             try:
                 if self.var_sup_invoice.get() == "":
@@ -101,11 +114,12 @@ class supplierClass:
                         con.commit()
                         messagebox.showinfo("Thành công", "Thêm nhà cung cấp thành công", parent=self.root)
                         self.show()
+                        self.clear()
             except Exception as ex:
                 messagebox.showerror("Lỗi", f"Lỗi do: {str(ex)}", parent=self.root)
 
     def update(self):
-        with sqlite3.connect(database=r'ims.db') as con:
+        with sqlite3.connect(database='ims.db') as con:
             cur = con.cursor()
             try:
                 if self.var_sup_invoice.get() == "":
@@ -130,11 +144,12 @@ class supplierClass:
                         con.commit()
                         messagebox.showinfo("Thành công", "Cập nhật nhà cung cấp thành công", parent=self.root)
                         self.show()
+                        self.clear()
             except Exception as ex:
                 messagebox.showerror("Lỗi", f"Lỗi do: {str(ex)}", parent=self.root)
 
     def delete(self):
-        with sqlite3.connect(database=r'ims.db') as con:
+        with sqlite3.connect(database='ims.db') as con:
             cur = con.cursor()
             try:
                 if self.var_sup_invoice.get() == "":
@@ -148,6 +163,7 @@ class supplierClass:
                         con.commit()
                         messagebox.showinfo("Thành công", "Xóa nhà cung cấp thành công", parent=self.root)
                         self.show()
+                        self.clear()
             except Exception as ex:
                 messagebox.showerror("Lỗi", f"Lỗi do: {str(ex)}", parent=self.root)
 
@@ -156,7 +172,6 @@ class supplierClass:
         self.var_name.set("")
         self.var_contact.set("")
         self.txt_desc.delete("1.0", END)
-        self.show()
 
     def get_data(self, ev):
         f = self.supplierTable.focus()
@@ -170,7 +185,7 @@ class supplierClass:
             self.txt_desc.insert(END, row[3])
 
     def show(self):
-        with sqlite3.connect(database=r'ims.db') as con:
+        with sqlite3.connect(database='ims.db') as con:
             cur = con.cursor()
             try:
                 cur.execute("SELECT * FROM supplier")
@@ -180,17 +195,18 @@ class supplierClass:
                     self.supplierTable.insert('', END, values=row)
             except Exception as ex:
                 messagebox.showerror("Lỗi", f"Lỗi do: {str(ex)}", parent=self.root)
+
     def search(self):
         try:
-            con = sqlite3.connect(database=r"ims.db")
+            con = sqlite3.connect(database="ims.db")
             cur = con.cursor()
             search_term = self.var_searchtxt.get()
-            
+
             if search_term == "":
-                messagebox.showerror("Lỗi", "Vui lòng nhập tên cần tìm!", parent=self.root)
+                messagebox.showerror("Lỗi", "Vui lòng nhập số hóa đơn cần tìm!", parent=self.root)
                 return
 
-            cur.execute("SELECT * FROM supplier WHERE name LIKE ?", ('%' + search_term + '%',))
+            cur.execute("SELECT * FROM supplier WHERE invoice LIKE ?", ('%' + search_term + '%',))
             rows = cur.fetchall()
 
             self.supplierTable.delete(*self.supplierTable.get_children())
@@ -205,7 +221,6 @@ class supplierClass:
 
         except Exception as ex:
             messagebox.showerror("Lỗi", f"Lỗi do: {str(ex)}", parent=self.root)
-
 
 if __name__ == "__main__":
     root = Tk()
