@@ -23,7 +23,7 @@ class IMS:
         title = Label(self.root, text="Hệ Thống Quản Lý Hàng Tồn Kho",image=self.icon_title,compound=LEFT, font=("Times New Roman", 40, "bold"),bg="#010c48",fg="white",anchor="w",padx=20).place(x=0, y=0, relwidth=1, height=70)
 
         #logout
-        btn_logout = Button(self.root,text="Đăng xuất",font=("times new roman",15,"bold"),bg="yellow",cursor="hand2").place(x=1100,y=10,height=50,width=150)
+        btn_logout = Button(self.root,text="Đăng xuất",command=self.logout,font=("times new roman",15,"bold"),bg="yellow",cursor="hand2").place(x=1100,y=10,height=50,width=150)
         #clock
         self.lbl_clock = Label(self.root, font=("Times New Roman", 15, "bold"), bg="#4d636d", fg="white")
         self.lbl_clock.place(x=0, y=70, relwidth=1, height=30)
@@ -121,7 +121,14 @@ class IMS:
             text=f"Chào mừng đến với Hệ Thống Quản Lý Hàng Tồn Kho\t\t Ngày: {current_date} \t\t Giờ: {current_time}"
         )
         self.lbl_clock.after(1000, self.update_clock)  # Update every 1 second
-
+    def logout(self):
+        confirm = messagebox.askyesno("Xác nhận", "Bạn có chắc chắn muốn đăng xuất?", parent=self.root)
+        if confirm:
+            self.root.destroy()
+            try:
+                os.system("python login.py")
+            except Exception as e:
+                messagebox.showerror("Lỗi", f"Không thể mở trang đăng nhập: {str(e)}")
 if __name__=="__main__":
     root=Tk()
     obj=IMS(root)
