@@ -5,6 +5,13 @@ from supplier import supplierClass
 from category import categoryClass
 from product import ProductClass
 from sales import SalesClass
+from matpllotlib import open_gui
+import sqlite3
+from tkinter import messagebox
+import os
+import time
+from datetime import datetime
+
 class IMS:
     def __init__(self,root):
         self.root=root
@@ -18,8 +25,9 @@ class IMS:
         #logout
         btn_logout = Button(self.root,text="Đăng xuất",font=("times new roman",15,"bold"),bg="yellow",cursor="hand2").place(x=1100,y=10,height=50,width=150)
         #clock
-        self.lbl_clock = Label(self.root, text="Chào mừng đến với Hệ Thống Quản Lý Hàng Tồn Kho\t\t Ngày: DD-MM-YYYY\t\t Giờ: HH:MM:SS",font=("Times New Roman", 15, "bold"),bg="#4d636d",fg="white")
+        self.lbl_clock = Label(self.root, font=("Times New Roman", 15, "bold"), bg="#4d636d", fg="white")
         self.lbl_clock.place(x=0, y=70, relwidth=1, height=30)
+        self.update_clock()  
 
         #leftmenu
         self.MenuLogo=Image.open("img/menu_im.png")
@@ -57,8 +65,11 @@ class IMS:
         self.lbl_sales=Label(self.root,text="Tong So Sales\n[ 0 ]",bg="#ffc107",relief=RIDGE,fg="white",font=("goudy old style",20,"bold"))
         self.lbl_sales.place(x=650,y=300,height=150,width=300)
 
-        lbl_footer = Label(self.root, text="Hệ thống quản lý hàng tồn kho | Được phát triển bởi Ngquoc\nLiên hệ kỹ thuật đối với bất kì vấn đề nào",font=("Times New Roman", 13, "bold"),bg="#4d636d",fg="white").pack(side=BOTTOM,fill=X)
+        self.lbl_graph=Button(self.root,text="Xem Bieu Do",command=open_gui,image=self.icon_side,compound=LEFT,padx=5,anchor="w",font=("times new roman",20,"bold"),bg="white",bd=3,cursor="hand2")
+        self.lbl_graph.place(x=1000,y=300,height=150,width=300)
 
+        lbl_footer = Label(self.root, text="Hệ thống quản lý hàng tồn kho | Được phát triển bởi Ngquoc & DTK\nLiên hệ kỹ thuật đối với bất kì vấn đề nào",font=("Times New Roman", 13, "bold"),bg="#4d636d",fg="white").pack(side=BOTTOM,fill=X)
+        self.update_content()
     def employee(self):
         self.new_win=Toplevel(self.root)
         self.new_obj=employeeClass(self.new_win)
@@ -79,8 +90,37 @@ class IMS:
         self.new_win=Toplevel(self.root)
         self.new_obj=SalesClass(self.new_win)
 
-    
- 
+    def update_content(self):
+        con = sqlite3.connect(database=r'ims.db')
+        cur = con.cursor()
+        try:
+            cur.execute("SELECT * FROM product")
+            products = cur.fetchall()
+            self.lbl_product.config(text=f'Total Products\n[ {str(len(products))} ]')
+
+            cur.execute("SELECT * FROM supplier")
+            supplier = cur.fetchall()
+            self.lbl_supplier.config(text=f'Total Suppliers\n[ {str(len(supplier))} ]')
+
+            cur.execute("SELECT * FROM category")
+            category = cur.fetchall()
+            self.lbl_category.config(text=f'Total Category\n[ {str(len(category))} ]')
+
+            cur.execute("SELECT * FROM employee")
+            employee = cur.fetchall()
+            self.lbl_employee.config(text=f'Total Employees\n[ {str(len(employee))} ]')
+            bill=len(os.listdir('bill'))
+            self.lbl_sales.config(text=f'Total Sales [{str(bill)}]')
+        except Exception as ex:
+            messagebox.showerror("Lỗi", f"Lỗi do: {str(ex)}", parent=self.root)
+
+    def update_clock(self):
+        current_time = time.strftime("%H:%M:%S")
+        current_date = datetime.now().strftime("%d-%m-%Y")
+        self.lbl_clock.config(
+            text=f"Chào mừng đến với Hệ Thống Quản Lý Hàng Tồn Kho\t\t Ngày: {current_date} \t\t Giờ: {current_time}"
+        )
+        self.lbl_clock.after(1000, self.update_clock)  # Update every 1 second
 
 if __name__=="__main__":
     root=Tk()

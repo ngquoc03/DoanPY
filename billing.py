@@ -4,7 +4,9 @@ from PIL import Image, ImageTk
 from tkinter import ttk
 import sqlite3
 import os
-
+import time
+from datetime import datetime
+import tempfile
 class BillClass:
     def __init__(self, root):
         self.root = root
@@ -12,6 +14,7 @@ class BillClass:
         self.root.title("Hệ Thống Quản Lý Hàng Tồn Kho")
         self.root.config(bg="white")
         self.cart_list = []
+        self.chk_print=0
 
         # === Title Bar with Logo ===
         try:
@@ -32,7 +35,7 @@ class BillClass:
         title.place(x=0, y=0, relwidth=1, height=70)
 
         # === Logout Button ===
-        btn_logout = Button(self.root, text="Đăng xuất", font=("times new roman", 15, "bold"),
+        btn_logout = Button(self.root, text="Đăng xuất",command=self.logout, font=("times new roman", 15, "bold"),
                             bg="yellow", cursor="hand2")
         btn_logout.place(x=1100, y=10, height=50, width=150)
 
@@ -45,6 +48,7 @@ class BillClass:
             fg="white"
         )
         self.lbl_clock.place(x=0, y=70, relwidth=1, height=30)
+        self.update_date_time()
 
         # === Product Frame ===
         ProductFrame1 = Frame(self.root, bd=4, relief=RIDGE, bg="white")
@@ -96,7 +100,7 @@ class BillClass:
         self.product_Table.heading("status", text="Trạng thái")
 
         self.product_Table.column("pid", width=40)
-        self.product_Table.column("name", width=100)
+        self.product_Table.column("name", width=90)
         self.product_Table.column("price", width=100)
         self.product_Table.column("qty", width=40)
         self.product_Table.column("status", width=90)
@@ -235,6 +239,7 @@ class BillClass:
 
         self.CartTable["show"] = "headings"
         self.CartTable.pack(fill=BOTH, expand=1)
+        self.CartTable.bind("<ButtonRelease-1>", self.get_data_cart)
 
         #Add cart widgets frame
         self.var_qty = StringVar()
@@ -260,7 +265,7 @@ class BillClass:
         self.lbl_inStock = Label(Add_CartWidgetsFrame, text="Số lượng", font=("times new roman", 15), bg="white")
         self.lbl_inStock.place(x=5, y=70)
 
-        btn_clear_cart = Button(Add_CartWidgetsFrame, text="Clear", font=("goudy old style", 15,"bold"), bg="lightgray", cursor="hand2")
+        btn_clear_cart = Button(Add_CartWidgetsFrame, text="Clear",command=self.clear_cart, font=("goudy old style", 15,"bold"), bg="lightgray", cursor="hand2")
         btn_clear_cart.place(x=180, y=70, width=150, height=30) 
         btn_add_cart = Button(Add_CartWidgetsFrame, text="Thêm vào giỏ hàng",command=self.add_update_cart, font=("goudy old style", 15,"bold"), bg="#4caf50", cursor="hand2")
         btn_add_cart.place(x=340, y=70, width=180, height=30)
@@ -289,19 +294,20 @@ class BillClass:
         self.lbl_net_pay = Label(billMenuFrame, text="Thanh Toán\n[0]", font=("goudy old style", 15,"bold"), bg="#ffc107", fg="white")
         self.lbl_net_pay.place(x=250, y=5,width=130, height=70)
 
-        btn_print = Button(billMenuFrame, text="In hóa đơn", font=("goudy old style", 15,"bold"), bg="#4caf50", cursor="hand2")
+        btn_print = Button(billMenuFrame, text="In hóa đơn",command=self.print_bill, font=("goudy old style", 15,"bold"), bg="#4caf50", cursor="hand2")
         btn_print.place(x=2, y=80, width=120, height=50)
 
         btn_clear_all = Button(billMenuFrame, text="Xóa tất cả", font=("goudy old style", 15,"bold"), bg="#ff5722", cursor="hand2")
         btn_clear_all.place(x=124, y=80, width=120, height=50)
 
-        btn_generate = Button(billMenuFrame, text="Luu hóa đơn", font=("goudy old style", 15,"bold"), bg="#ffc107", cursor="hand2")
+        btn_generate = Button(billMenuFrame, text="Tạo/Lưu hóa đơn",command=self.generate_bill, font=("goudy old style", 15,"bold"), bg="#ffc107", cursor="hand2")
         btn_generate.place(x=250, y=80, width=130, height=50)
 
         #footer
-        footer=Label(self.root, text="Hệ thống quản lý hàng tồn kho | Được phát triển bởi Ngquoc\nLiên hệ kỹ thuật đối với bất kì vấn đề nào",font=("Times New Roman", 13, "bold"),bg="#4d636d",fg="white").pack(side=BOTTOM,fill=X)
+        footer=Label(self.root, text="Hệ thống quản lý hàng tồn kho | Được phát triển bởi Ngquoc & DTK\nLiên hệ kỹ thuật đối với bất kì vấn đề nào",font=("Times New Roman", 13, "bold"),bg="#4d636d",fg="white").pack(side=BOTTOM,fill=X)
         
         self.show()  # Show all products in the table
+        #self.bill_top()
     #all functions for bill class
     def get_input(self, num):
         current = self.var_cal_input.get()
@@ -356,6 +362,23 @@ class BillClass:
         self.var_pid.set(row[0])
         self.var_pname.set(row[1])
         self.var_price.set(row[2])
+        self.var_qty.set(row[3])
+        self.lbl_inStock.config(text=f"Số lượng[{str(row[3])}]")
+        self.var_stock.set(row[3])
+
+        self.lbl_inStock.config(text=f"Số lượng[{row[3]}]")
+
+    def get_data_cart(self, ev):
+        f = self.CartTable.focus()
+        content = self.CartTable.item(f)
+        row = content['values']
+        self.var_pid.set(row[0])
+        self.var_pname.set(row[1])
+        self.var_price.set(row[2])
+        self.lbl_inStock.config(text=f"Số lượng[{str(row[4])}]")
+        self.var_stock.set(row[4])
+        self.var_qty.set('1')
+
         self.lbl_inStock.config(text=f"Số lượng[{row[3]}]")
 
     def add_update_cart(self):
@@ -367,11 +390,14 @@ class BillClass:
             messagebox.showerror("Lỗi", "Không đủ hàng trong kho", parent=self.root)
         elif int(self.var_qty.get()) <= 0:
             messagebox.showerror("Lỗi", "Số lượng không hợp lệ", parent=self.root)
+        elif int(self.var_qty.get()) > int(self.var_stock.get()):
+            messagebox.showerror("Lỗi", "Số lượng không hợp lệ", parent=self.root)
         else:
-            price_cal = float(self.var_price.get()) * int(self.var_qty.get())
-            price_cal = float(price_cal)
-            print(price_cal)
-            cart_data = [self.var_pid.get(), self.var_pname.get(), self.var_price.get(), self.var_qty.get()]
+            # price_cal = float(self.var_price.get()) * int(self.var_qty.get())
+            # price_cal = float(price_cal)
+            price_cal = self.var_price.get()
+            # print(price_cal)
+            cart_data = [self.var_pid.get(), self.var_pname.get(), self.var_price.get(), self.var_qty.get(), self.var_stock.get()]
             ## Update the cart table
             present = "no"
             index_ = -1
@@ -386,7 +412,7 @@ class BillClass:
                     if self.var_qty.get() == "0":
                         self.cart_list.pop(index_)
                     else:
-                        self.cart_list[index_][2] = price_cal
+                        # self.cart_list[index_][2] = price_cal
                         self.cart_list[index_][3] = self.var_qty.get()
             else:
                 self.cart_list.append(cart_data)
@@ -394,27 +420,139 @@ class BillClass:
             self.bill_update()
 
     def bill_update(self):
-        bill_amnt = 0
-        net_pay = 0
+        self.bill_amnt = 0
+        self.net_pay = 0
+        self.discount = 0
         for row in self.cart_list:
-            bill_amnt=bill_amnt+float(row[2])
+            self.bill_amnt=self.bill_amnt+float(row[2]*int(row[3]))
 
-        net_pay =bill_amnt - ((bill_amnt * 5)/100)
-        self.lbl_amnt.config(text=f"Tổng Bill\n[{str(bill_amnt)}]")
-        self.lbl_net_pay.config(text=f"Thanh Toán\n[{str(net_pay)}]")
-        self.cartTitle.config(text="Cart\t Total Product: [{str(len(self.cart_list))}]")
+        self.discount = (self.bill_amnt * 5) / 100
+        self.net_pay =self.bill_amnt - self.discount 
+        self.lbl_amnt.config(text=f"Tổng Bill\n[{str(self.bill_amnt)}]")
+        self.lbl_net_pay.config(text=f"Thanh Toán\n[{str(self.net_pay)}]")
+        self.cartTitle.config(text=f"Cart\t Total Product: [{len(self.cart_list)}]")
+
         # Assuming a 5% discount
-
 
     def show_cart(self):
         try:
             self.CartTable.delete(*self.CartTable.get_children())
             for row in self.cart_list:
-                self.CartTable.insert('', END, values=row)
+                self.CartTable.insert('', END,values=row)
         except Exception as ex:
-            messagebox.showerror("Lỗi", f"Lỗi do: {str(ex)}", parent=self.root)
+            messagebox.showerror("Error","Error due to : {str(ex)}",parent=self.root)
+    def generate_bill(self):
+        if self.var_cname.get()=='' or self.var_contact.get()=='':
+            messagebox.showerror("Error","Customer Details are required", parent=self.root)
+        elif len(self.cart_list)==0:
+            messagebox.showerror("Error","Please Add Product to The Cart", parent=self.root)
+        else:
+            #====BI11 Top====
+            self.bill_top()
+            #====BIll Middle====
+            self.bill_middle()
+            #====BI11 Bottom====
+            self.bill_bottom()
 
-        
+            fp=open(f'bill/{str(self.invoice)}.txt', 'w')
+            fp.write(self.txt_bill_area.get('1.0', END))
+            fp.close()
+            messagebox.showinfo('Saved', "Bill has been generated/Save in Backen",parent=self.root)
+            self.chk_print=1
+    def bill_top(self):
+        self.invoice = int(time.strftime("%H%M%S")) + int(time.strftime("%d%m%Y"))
+        bill_top_temp = f"""
+\t\tXYZ-Inventory
+\t Phone No. 98725*, Delhi-125001
+{"="*47}
+Customer Name: {self.var_cname.get()}
+Ph no.: {self.var_contact.get()}
+Bill No.: {str(self.invoice)}\t\t\tDate: {time.strftime("%d/%m/%Y")}
+{"="*47}
+Product Name\t\t\tQTY\tPrice
+{"="*47}"""
+        self.txt_bill_area.delete('1.0', END)
+        self.txt_bill_area.insert('1.0', bill_top_temp)
+    def bill_bottom(self):
+        bill_amount = 1000  # ví dụ, thay bằng tính toán thực tế
+        discount = 5
+        net_pay = bill_amount - discount
+
+        bill_bottom_temp = f"""{'='*47}
+Bill Amount\t\t\t\tRs.{self.bill_amnt}
+Discount\t\t\t\tRs.{self.discount}
+Net Pay\t\t\t\tRs.{self.net_pay}
+{'='*47}
+"""
+        self.txt_bill_area.insert(END, bill_bottom_temp)
+    def bill_middle(self):
+        con = sqlite3.connect(database=r'ims.db')
+        cur = con.cursor()
+        try:
+            for row in self.cart_list:
+                # pid, name, price, qty, stock
+                pid = row[0]
+                name = row[1]
+                qty = int(row[4] - int(row[3]))
+                if int(row[3]) == int(row[4]):
+                    status = "Inactive"
+                if int(row[3]) != int(row[4]):
+                    status = "Active"
+                price = float(row[2]) * int(row[3])
+                price_str = f"{price:.2f}"  # format giá tiền với 2 chữ số sau dấu thập phân
+
+                self.txt_bill_area.insert(END, "\n " + name + "\t\t\t" + row[3] + "\tRs." + price_str)
+                cur.execute('UPDATE product SET qty = ?, status = ? WHERE pid = ?', (
+                    qty,
+                    status,
+                    pid
+                ))
+                con.commit()
+            con.close()
+            self.show()
+        except Exception as ex:
+            messagebox.showerror("Error", f"Error due to: {str(ex)}", parent=self.root)
+
+    def clear_cart(self):
+        self.var_pid.set('')
+        self.var_phame.set('')
+        self.var_price.set('')
+        self.var_qty.set('')
+        self.lbl_inStock.config(text=f"In Stock")
+        self.var_stock.set('')
+    def clear_all(self):
+        del self.cart_list[:]
+        self.var_cname.set('')
+        self.var_contact.set('')
+        self.cartTitle.config(text="Cart \t Total Product: [0]")
+        self.var_search.set('')
+        self.txt_bill_area.delete('1.0', END)
+        self.clear_cart()
+        self.chk_print=0
+        self.show()
+        self.show_cart()
+    def update_date_time(self):
+        now = datetime.now()
+        date_ = now.strftime("%d-%m-%Y")
+        time_ = now.strftime("%H:%M:%S")
+        self.lbl_clock.config(text=f"Chào mừng đến với Hệ Thống Quản Lý Hàng Tồn Kho\t\t Ngày: {date_}\t\t Giờ: {time_}")
+        self.lbl_clock.after(1000, self.update_date_time) 
+    def print_bill(self):
+        if self.chk_print==1:
+            messagebox.showinfo('Print', "Please wait while printing",parent=self.root)
+            new_file=tempfile.mktemp('.txt')
+            open (new_file, 'w').write(self.txt_bill_area.get('1.0', END))
+            os.startfile(new_file,'print')
+        else:
+            messagebox.showerror('Print', "Please generate bill", parent=self.root)
+    def logout(self):
+        confirm = messagebox.askyesno("Xác nhận", "Bạn có chắc chắn muốn đăng xuất?", parent=self.root)
+        if confirm:
+            self.root.destroy()
+            try:
+                os.system("python login.py")
+            except Exception as e:
+                messagebox.showerror("Lỗi", f"Không thể mở trang đăng nhập: {str(e)}")
 if __name__ == "__main__":
     root = Tk()
     obj = BillClass(root)
